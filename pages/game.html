@@ -1,7 +1,15 @@
 <!doctype html>
 <html>
     <head>
-        <title>r/Splatoon Jumper</title>
+        <title>r/Splatoon Hop</title>
+        <meta name="description" content="Mini-game to pass the time during r/Splatoon custom splatfests">
+        <meta name="keywords" content="Splatoon, r/Splatoon, r/Splatoon minigame">
+        <meta name="author" content="shane#1353">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="apple-touch-icon" sizes="180x180" href="/fav/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/fav/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/fav/favicon-16x16.png">
+        <link rel="manifest" href="/fav/site.webmanifest">
         <style>
             @font-face {
                 font-family: 'SplatRegular';
@@ -24,6 +32,7 @@
                 margin-top: 10px;
                 font-family: "SplatRegular";
                 text-align: center;
+                position: relative;
             }
             ul {
                 font-family: "SplatRegular";
@@ -33,6 +42,14 @@
                 width: 300px;
                 padding-left: 60px;
             }
+            p {
+                font-family: "SplatRegular";
+                padding: 0;
+                margin: auto;
+                display: block;
+                max-width: 300px;
+                text-align: center;
+            }
             #share {
                 font-family: "SplatRegular";
                 padding: 0;
@@ -40,18 +57,31 @@
                 display: block;
                 width: 100px;
                 margin-top:10px;
+                border: none;
+                background: #1ae1b3;
             }
         </style>
     </head>
     <body>
-        <h3>r/Splatoon Hop</h3>
+        <h3>
+            r/Splatoon Hop
+        </h3>
+        <p>
+            Inspired by <a href="https://splatoon.fandom.com/wiki/Arcade_Machine#Squid_Jump" target="_blank">Squid Jump</a>. 
+            Like it? Talk about it on the r/Splatoon <a href="https://discord.gg/rsplatoon" target="_blank">Discord</a> or 
+            <a href="https://reddit.com/r/splatoon" target="_blank">Subreddit</a>!
+        </p>
+        
         <canvas id="canvas" style="border:1px solid #000"></canvas>
-        <h4>Controls</h4>
+        <h4>
+            Controls
+            <button type="button" id="share" style="display:none;position:absolute;right:0;top:-8px;" onclick="share()">Share Score</button>
+        </h4>
         <ul>
             <li>Space or Down Arrow: Charge jump</li>
             <li>Left/Right: Directions</li>
         </ul>
-        <button type="button" id="share" style="display:none;" onclick="share()">Share Score</button>
+        
 
         <script src="/js/html2canvas.min.js"></script>
         <script src="/js/game.min.js"></script>

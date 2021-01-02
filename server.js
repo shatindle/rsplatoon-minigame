@@ -17,6 +17,7 @@ app.set('view engine', 'html');
 
 app.use('/js', express.static(__dirname + '/js'));
 app.use('/css', express.static(__dirname + '/css'));
+app.use('/fav', express.static(__dirname + '/fav'));
 
 require("./pages/game")(app);
 
