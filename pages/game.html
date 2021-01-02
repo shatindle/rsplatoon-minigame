@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+    <head>
+        <title>r/Splatoon Jumper</title>
+        <style>
+            @font-face {
+                font-family: 'SplatRegular';
+                src: url('/css/Splatfont2.ttf') format('truetype');
+                font-weight: normal;
+                font-style: normal;
+            }
+            canvas {
+                padding: 0;
+                margin: auto;
+                display: block;
+                width: 300px;
+                margin-top: 10px;
+            }
+            h3, h4 {
+                padding: 0;
+                margin: auto;
+                display: block;
+                width: 300px;
+                margin-top: 10px;
+                font-family: "SplatRegular";
+                text-align: center;
+            }
+            ul {
+                font-family: "SplatRegular";
+                padding: 0;
+                margin: auto;
+                display: block;
+                width: 300px;
+                padding-left: 60px;
+            }
+            #share {
+                font-family: "SplatRegular";
+                padding: 0;
+                margin: auto;
+                display: block;
+                width: 100px;
+                margin-top:10px;
+            }
+        </style>
+    </head>
+    <body>
+        <h3>r/Splatoon Hop</h3>
+        <canvas id="canvas" style="border:1px solid #000"></canvas>
+        <h4>Controls</h4>
+        <ul>
+            <li>Space or Down Arrow: Charge jump</li>
+            <li>Left/Right: Directions</li>
+        </ul>
+        <button type="button" id="share" style="display:none;" onclick="share()">Share Score</button>
+
+        <script src="/js/html2canvas.min.js"></script>
+        <script src="/js/game.min.js"></script>
+    </body>
+</html>

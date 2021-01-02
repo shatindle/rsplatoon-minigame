@@ -1,0 +1,31 @@
+{
+  "name": "rsplatoon-minigame",
+  "version": "1.0.0",
+  "description": "Mini-game for r/Splatoon.  Eventually will be used for users waiting in the queue for custom splatfests.",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "minify": "node compile.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shatindle/rsplatoon-minigame.git"
+  },
+  "keywords": [
+    "Splatoon",
+    "minigame",
+    "game"
+  ],
+  "author": "shane#1353",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shatindle/rsplatoon-minigame/issues"
+  },
+  "homepage": "https://github.com/shatindle/rsplatoon-minigame#readme",
+  "dependencies": {
+    "@node-minify/core": "^6.1.0",
+    "@node-minify/uglify-es": "^6.1.0",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.6"
+  }
+}
