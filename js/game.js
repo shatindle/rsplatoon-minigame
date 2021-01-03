@@ -13,10 +13,12 @@ function isTouchDevice() {
     return 'ontouchstart' in document.documentElement;
 }
 
+var IS_TOUCH = isTouchDevice();
+
 var canvas = document.getElementById("canvas"),
     ctx = canvas.getContext("2d"),
     width = 300,
-    height = isTouchDevice() ? 450 : 500,
+    height = IS_TOUCH ? 450 : 500,
     canvasHeight = 500,
     midHeight = height / 2,
     player = {
@@ -30,7 +32,7 @@ var canvas = document.getElementById("canvas"),
         jumping: false,
         jumpHold: null,
         jumpHoldTime: null,
-        ghost: 0, // 0 = no ghost, 1 = left ghost, 2 = right ghost
+        ghost: 0, // 0 = no ghost, 1 = left ghost
         grounded: false,
         dead: false,
         score: 0
@@ -44,7 +46,7 @@ var canvas = document.getElementById("canvas"),
     },
     keys = [],
     friction = 0.8,
-    gravity = isTouchDevice() ? 0.13 : 0.2,
+    gravity = IS_TOUCH ? 0.13 : 0.2,
     bottomIsDeath = false;
 
 canvas.width = width;
@@ -255,8 +257,18 @@ function update() {
         return;
     }
 
-    // check keys
-    if (keys[40] || keys[32] || (keys["touch"] && keys["touch"].length && keys["touch"][keys["touch"].length - 1].action !== "end" && !keys["touch"][0].wasJumping)) {
+    var hasTouchAction = false,
+        firstTouchAction = null,
+        lastTouchAction = null;
+    
+    if (keys["touch"] && keys["touch"].length) {
+        hasTouchAction = true;
+        firstTouchAction = keys["touch"][0];
+        lastTouchAction = keys["touch"][keys["touch"].length - 1];
+    }
+
+    // jump hold (space, down arrow, touch up)
+    if (keys[40] || keys[32] || (hasTouchAction && lastTouchAction.action !== "end" && !firstTouchAction.wasJumping)) {
         // up arrow or space
         if (!player.jumping && !player.jumpHold) {
             player.jumpHold = Math.round(Date.now() / 1);
@@ -274,7 +286,7 @@ function update() {
                 player.grounded = false;
                 player.jumpHoldTime = Math.round(Date.now() / 1) - player.jumpHold;
     
-                if (isTouchDevice()) {
+                if (IS_TOUCH) {
                     if (player.jumpHoldTime > 1500)
                         player.jumpHoldTime = 800;
                     else if (player.jumpHoldTime < 500)
@@ -289,7 +301,7 @@ function update() {
                 }
                 
 
-                player.jumpHoldTime = player.speed * (player.jumpHoldTime / (isTouchDevice() ? 700 : 650));
+                player.jumpHoldTime = player.speed * (player.jumpHoldTime / (IS_TOUCH ? 700 : 650));
                 
                 player.jumpHold = null;
     
@@ -313,40 +325,30 @@ function update() {
         }
     }
 
-    // todo: figure out what the magic number 86 is 
-    if (keys[39] && player.jumping || keys["touch"] && keys["touch"].length && player.jumping && (player.x + player.width / 2 - 2 < keys["touch"][keys["touch"].length - 1].x - (window.innerWidth / 2 - width / 2))) { 
+    // right arrow or right direction
+    if (keys[39] && player.jumping || hasTouchAction && player.jumping && (player.x + player.width / 2 - 2 < lastTouchAction.x - (window.innerWidth / 2 - width / 2))) { 
         // // remove everything else from the keys array - we don't need it
-        if (keys["touch"] && keys["touch"].length > 1 && keys["touch"][keys["touch"].length - 1].action !== "end")
-            keys["touch"] = [keys["touch"][keys["touch"].length - 1]];
+        if (hasTouchAction && keys["touch"].length > 1 && lastTouchAction.action !== "end")
+            keys["touch"] = [lastTouchAction];
         
-        if (keys["touch"] && keys["touch"].length && player.velX < 0 && keys["touch"][keys["touch"].length - 1].action !== "end")
+        if (hasTouchAction && player.velX < 0 && lastTouchAction.action !== "end")
             player.velX = 0;
 
-        // right arrow means set x to greater than width
-        // if (keys["touch"] && keys["touch"][keys["touch"].length - 1].action === "end")
-        //     keys["touch"][keys["touch"].length - 1].x = width + 10000;
-
-        // right arrow
         if (player.velX < player.speed) {
             player.velX++;
         }
     }
 
-    // todo: figure out what the magic number 52 is
-    if (keys[37] && player.jumping || keys["touch"] && keys["touch"].length && player.jumping && (player.x + player.width / 2 + 2 > keys["touch"][keys["touch"].length - 1].x - (window.innerWidth / 2 - width / 2))) { 
+    // left arrow or left direction
+    if (keys[37] && player.jumping || hasTouchAction && player.jumping && (player.x + player.width / 2 + 2 > lastTouchAction.x - (window.innerWidth / 2 - width / 2))) { 
         
         // remove everything else from the keys array - we don't need it
-        if (keys["touch"] && keys["touch"].length > 1 && keys["touch"][keys["touch"].length - 1].action !== "end")
-            keys["touch"] = [keys["touch"][keys["touch"].length - 1]];
+        if (hasTouchAction && keys["touch"].length > 1 && lastTouchAction.action !== "end")
+            keys["touch"] = [lastTouchAction];
 
-        if (keys["touch"] && keys["touch"].length && player.velX > 0 && keys["touch"][keys["touch"].length - 1].action !== "end")
+        if (hasTouchAction && player.velX > 0 && lastTouchAction.action !== "end")
             player.velX = 0;
 
-        // left arrow means set x to less than 0
-        // if (keys["touch"] && keys["touch"][keys["touch"].length - 1].action === "end")
-        //     keys["touch"][keys["touch"].length - 1].x = -10000;
-        
-        // left arrow
         if (player.velX > -player.speed) {
             player.velX--;
         }
@@ -357,7 +359,7 @@ function update() {
 
     ctx.clearRect(0, 0, width, canvasHeight);
 
-    if (isTouchDevice()) {
+    if (IS_TOUCH) {
         ctx.fillStyle = "gray";
         ctx.fillRect(0, height, width, canvasHeight - height);
     }
@@ -376,21 +378,35 @@ function update() {
     
     player.grounded = false;
 
+    var playerGhost = null;
+
+    if (player.ghost)
+        playerGhost = {
+            x: 0,
+            y: player.y,
+            width: player.width + player.x - width,
+            height: player.height
+        };
+
     for (var i = 0; i < boxes.length; i++) {
         ctx.rect(boxes[i].x, boxes[i].y, boxes[i].width, boxes[i].height);
         
         var dir = colCheck(player, boxes[i]);
 
-        if (dir === "l" || dir === "r") {
+        var ghostDir = null;
+
+        if (playerGhost)
+            ghostDir = colCheck(playerGhost, boxes[i]);
+
+        if (dir === "l" || dir === "r" || ghostDir === "l" || ghostDir === "r") {
             player.velX = 0;
-            //player.jumping = true;
-        } else if (dir === "b") {
+        } else if (dir === "b" || ghostDir === "b") {
             player.grounded = true;
             player.jumping = false;
-        } else if (dir === "t") {
+            player.y = boxes[i].y - player.height;
+        } else if (dir === "t" || ghostDir === "t") {
             player.velY *= -1;
         }
-
     }
 
     ctx.fill();
@@ -419,15 +435,15 @@ function update() {
         player.ghost = 0;
     }
 
-    if (keys["touch"] && keys["touch"].length && player.jumping) {
-        keys["touch"][0].wasJumping = true;
+    if (hasTouchAction && player.jumping) {
+        firstTouchAction.wasJumping = true;
     }
 
     if (player.y >= height - player.height) {
         player.y = height - player.height;
         player.jumping = false;
 
-        if (keys["touch"] && keys["touch"].length && keys["touch"][keys["touch"].length - 1].action === "end")
+        if (hasTouchAction && lastTouchAction.action === "end")
             keys["touch"] = null;
 
         if (bottomIsDeath) {
@@ -468,9 +484,7 @@ function update() {
         if (player.jumpHold) {
             var jumpHoldTime = Math.round(Date.now() / 1) - player.jumpHold;
 
-            var isTouch = isTouchDevice();
-    
-            if (!isTouch && jumpHoldTime > 1000 || isTouch && jumpHoldTime > 1500) {
+            if (!IS_TOUCH && jumpHoldTime > 1000 || IS_TOUCH && jumpHoldTime > 1500) {
                 activeSquid = squidFocus3;
                 activeSquidGhost = squidFocus3;
             } else if (jumpHoldTime < 500) {
@@ -510,6 +524,11 @@ function update() {
                 // dx, dy dWidth, dHeight
                 0, player.y, actualPosition, squidNeutral.height);
         }
+    }
+
+    if (bottomIsDeath) {
+        ctx.fillStyle = "#5555ff";
+        ctx.fillRect(0, height - 4, width, 4);
     }
 
     frameRate();
@@ -635,7 +654,7 @@ function share() {
     window.open(score,'_blank');
 }
 
-if (isTouchDevice()) {
+if (IS_TOUCH) {
     document.getElementById("mobileControls").style.display = "";
     document.getElementById("desktopControls").style.display = "none";
 }
