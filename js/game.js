@@ -16,7 +16,8 @@ function isTouchDevice() {
 var canvas = document.getElementById("canvas"),
     ctx = canvas.getContext("2d"),
     width = 300,
-    height = 500,
+    height = isTouchDevice() ? 450 : 500,
+    canvasHeight = 500,
     midHeight = height / 2,
     player = {
         x: width / 2,
@@ -47,7 +48,7 @@ var canvas = document.getElementById("canvas"),
     bottomIsDeath = false;
 
 canvas.width = width;
-canvas.height = height;
+canvas.height = canvasHeight;
 
 // normal squid
 var squidNeutral = new Image();
@@ -344,7 +345,12 @@ function update() {
     player.velX *= friction;
     player.velY += gravity;
 
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, canvasHeight);
+
+    if (isTouchDevice()) {
+        ctx.fillStyle = "gray";
+        ctx.fillRect(0, height, width, canvasHeight - height);
+    }
 
     // 9999 / gradients = distance per gradient
     // floor(score / distance) = item (with overflow)

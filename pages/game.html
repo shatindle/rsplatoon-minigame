@@ -17,6 +17,15 @@
                 font-weight: normal;
                 font-style: normal;
             }
+            * {
+                -webkit-touch-callout: none; /* iOS Safari */
+                -webkit-user-select: none; /* Safari */
+                -khtml-user-select: none; /* Konqueror HTML */
+                -moz-user-select: none; /* Firefox */
+                -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently
+                                            supported by Chrome and Opera */
+            }
             canvas {
                 padding: 0;
                 margin: auto;
@@ -87,6 +96,6 @@
             <li>Drag: Squid moves to finger</li>
         </ul>
         
-        <script src="/js/game.js"></script>
+        <script src="/js/game.min.js"></script>
     </body>
 </html>
