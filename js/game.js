@@ -389,6 +389,9 @@ function update() {
         player.y = height - player.height;
         player.jumping = false;
 
+        if (keys["touch"] && keys["touch"].length && keys["touch"][keys["touch"].length - 1].action === "end")
+            keys["touch"] = null;
+
         if (bottomIsDeath) {
             player.dead = true;
         }
