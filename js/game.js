@@ -9,6 +9,10 @@
 
 var debug = false;
 
+function isTouchDevice() {
+    return 'ontouchstart' in document.documentElement;
+}
+
 var canvas = document.getElementById("canvas"),
     ctx = canvas.getContext("2d"),
     width = 300,
@@ -233,7 +237,7 @@ function update() {
     }
 
     // check keys
-    if (keys[40] || keys[32]) {
+    if (keys[40] || keys[32] || (keys["touch"] && keys["touch"].length && keys["touch"][keys["touch"].length - 1].action !== "end")) {
         // up arrow or space
         if (!player.jumping && !player.jumpHold) {
             player.jumpHold = Math.round(Date.now() / 1);
@@ -280,12 +284,39 @@ function update() {
         }
     }
 
-    if (keys[39] && player.jumping) { // right arrow
+    // todo: figure out what the magic number 86 is 
+    if (keys[39] && player.jumping || keys["touch"] && keys["touch"].length && player.jumping && (player.x < keys["touch"][keys["touch"].length - 1].x - 86)) { 
+        // // remove everything else from the keys array - we don't need it
+        if (keys["touch"].length > 1 && keys["touch"][keys["touch"].length - 1].action !== "end")
+            keys["touch"] = [keys["touch"][keys["touch"].length - 1]];
+        
+        if (keys["touch"].length && player.velX < 0 && keys["touch"][keys["touch"].length - 1].action !== "end")
+            player.velX = 0;
+
+        // right arrow means set x to greater than width
+        if (keys["touch"][keys["touch"].length - 1].action === "end")
+            keys["touch"][keys["touch"].length - 1].x = width + 10000;
+
+        // right arrow
         if (player.velX < player.speed) {
             player.velX++;
         }
     }
-    if (keys[37] && player.jumping) {
+
+    // todo: figure out what the magic number 52 is
+    if (keys[37] && player.jumping || keys["touch"] && keys["touch"].length && player.jumping && (player.x > keys["touch"][keys["touch"].length - 1].x - 52)) { 
+        
+        // remove everything else from the keys array - we don't need it
+        if (keys["touch"].length > 1 && keys["touch"][keys["touch"].length - 1].action !== "end")
+            keys["touch"] = [keys["touch"][keys["touch"].length - 1]];
+
+        if (keys["touch"].length && player.velX > 0 && keys["touch"][keys["touch"].length - 1].action !== "end")
+            player.velX = 0;
+
+        // left arrow means set x to less than 0
+        if (keys["touch"][keys["touch"].length - 1].action === "end")
+            keys["touch"][keys["touch"].length - 1].x = -10000;
+        
         // left arrow
         if (player.velX > -player.speed) {
             player.velX--;
@@ -494,6 +525,62 @@ window.addEventListener("load", function() {
   update();
 });
 
+function touchStart(e) {
+    e.preventDefault();
+
+    if (debug)
+        console.log("touchstart.");
+
+    var touches = e.changedTouches;
+    var touchX = touches[0].clientX,
+        touchY = touches[0].clientY;
+
+    keys["touch"] = [{
+        x: touchX,
+        y: touchY,
+        action: "start"
+    }];
+}
+
+function touchMove(e) {
+    e.preventDefault();
+
+    if (debug)
+        console.log("touchstart.");
+
+    var touches = e.changedTouches;
+    var touchX = touches[0].clientX,
+        touchY = touches[0].clientY;
+
+    //(touches);
+    
+    keys["touch"].push({
+        x: touchX,
+        y: touchY,
+        action: "move"
+    });
+}
+
+function touchEnd(e) {
+    e.preventDefault();
+
+    if (debug)
+        console.log("touchstart.");
+
+    var touches = e.changedTouches;
+    var touchX = touches[0].clientX,
+        touchY = touches[0].clientY;
+
+    keys["touch"].push({
+        x: touchX,
+        y: touchY,
+        action: "end"
+    });
+}
+
+canvas.addEventListener("touchstart", touchStart, false);
+canvas.addEventListener("touchmove", touchMove, false);
+canvas.addEventListener("touchend", touchEnd, false);
 
 function share() {
     var score = "https://twitter.com/intent/tweet?text=" + 
@@ -503,4 +590,9 @@ function share() {
         "How%20high%20can%20you%20go?%20https%3A%2F%2Fminigame.rsplatoon.com%2F";
 
     window.open(score,'_blank');
+}
+
+if (isTouchDevice()) {
+    document.getElementById("mobileControls").style.display = "";
+    document.getElementById("desktopControls").style.display = "none";
 }

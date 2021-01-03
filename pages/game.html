@@ -77,13 +77,15 @@
             Controls
             <button type="button" id="share" style="display:none;position:absolute;right:0;top:-8px;" onclick="share()">Share Score</button>
         </h4>
-        <ul>
+        <ul id="desktopControls" style="display:none;">
             <li>Space or Down Arrow: Charge jump</li>
             <li>Left/Right: Directions</li>
         </ul>
+        <ul id="mobileControls" style="display:none;">
+            <li>Touch hold: Charge jump</li>
+            <li>Drag: Squid moves to finger</li>
+        </ul>
         
-
-        <script src="/js/html2canvas.min.js"></script>
         <script src="/js/game.min.js"></script>
     </body>
 </html>
