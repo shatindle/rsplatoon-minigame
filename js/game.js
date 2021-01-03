@@ -44,7 +44,7 @@ var canvas = document.getElementById("canvas"),
     },
     keys = [],
     friction = 0.8,
-    gravity = 0.2,
+    gravity = isTouchDevice() ? 0.13 : 0.2,
     bottomIsDeath = false;
 
 canvas.width = width;
@@ -274,12 +274,22 @@ function update() {
                 player.grounded = false;
                 player.jumpHoldTime = Math.round(Date.now() / 1) - player.jumpHold;
     
-                if (player.jumpHoldTime > 1000)
-                    player.jumpHoldTime = 1000;
-                else if (player.jumpHoldTime < 500)
-                    player.jumpHoldTime = 500;
+                if (isTouchDevice()) {
+                    if (player.jumpHoldTime > 1500)
+                        player.jumpHoldTime = 800;
+                    else if (player.jumpHoldTime < 500)
+                        player.jumpHoldTime = 400;
+                    else 
+                        player.jumpHoldTime = ((player.jumpHoldTime - 500) / 1000) * 400 + 400;
+                } else {
+                    if (player.jumpHoldTime > 1000)
+                        player.jumpHoldTime = 1000;
+                    else if (player.jumpHoldTime < 500)
+                        player.jumpHoldTime = 500;
+                }
+                
 
-                player.jumpHoldTime = player.speed * (player.jumpHoldTime / 650);
+                player.jumpHoldTime = player.speed * (player.jumpHoldTime / (isTouchDevice() ? 700 : 650));
                 
                 player.jumpHold = null;
     
@@ -457,8 +467,10 @@ function update() {
     } else if (!player.jumping) {
         if (player.jumpHold) {
             var jumpHoldTime = Math.round(Date.now() / 1) - player.jumpHold;
+
+            var isTouch = isTouchDevice();
     
-            if (jumpHoldTime > 1000) {
+            if (!isTouch && jumpHoldTime > 1000 || isTouch && jumpHoldTime > 1500) {
                 activeSquid = squidFocus3;
                 activeSquidGhost = squidFocus3;
             } else if (jumpHoldTime < 500) {
