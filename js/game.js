@@ -255,7 +255,7 @@ function update() {
     }
 
     // check keys
-    if (keys[40] || keys[32] || (keys["touch"] && keys["touch"].length && keys["touch"][keys["touch"].length - 1].action !== "end")) {
+    if (keys[40] || keys[32] || (keys["touch"] && keys["touch"].length && keys["touch"][keys["touch"].length - 1].action !== "end" && !keys["touch"][0].wasJumping)) {
         // up arrow or space
         if (!player.jumping && !player.jumpHold) {
             player.jumpHold = Math.round(Date.now() / 1);
@@ -312,8 +312,8 @@ function update() {
             player.velX = 0;
 
         // right arrow means set x to greater than width
-        if (keys["touch"] && keys["touch"][keys["touch"].length - 1].action === "end")
-            keys["touch"][keys["touch"].length - 1].x = width + 10000;
+        // if (keys["touch"] && keys["touch"][keys["touch"].length - 1].action === "end")
+        //     keys["touch"][keys["touch"].length - 1].x = width + 10000;
 
         // right arrow
         if (player.velX < player.speed) {
@@ -332,8 +332,8 @@ function update() {
             player.velX = 0;
 
         // left arrow means set x to less than 0
-        if (keys["touch"] && keys["touch"][keys["touch"].length - 1].action === "end")
-            keys["touch"][keys["touch"].length - 1].x = -10000;
+        // if (keys["touch"] && keys["touch"][keys["touch"].length - 1].action === "end")
+        //     keys["touch"][keys["touch"].length - 1].x = -10000;
         
         // left arrow
         if (player.velX > -player.speed) {
@@ -401,6 +401,10 @@ function update() {
         player.ghost = 1;
     } else {
         player.ghost = 0;
+    }
+
+    if (keys["touch"] && keys["touch"].length && player.jumping) {
+        keys["touch"][0].wasJumping = true;
     }
 
     if (player.y >= height - player.height) {
