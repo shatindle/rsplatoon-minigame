@@ -287,14 +287,14 @@ function update() {
     // todo: figure out what the magic number 86 is 
     if (keys[39] && player.jumping || keys["touch"] && keys["touch"].length && player.jumping && (player.x < keys["touch"][keys["touch"].length - 1].x - 86)) { 
         // // remove everything else from the keys array - we don't need it
-        if (keys["touch"].length > 1 && keys["touch"][keys["touch"].length - 1].action !== "end")
+        if (keys["touch"] && keys["touch"].length > 1 && keys["touch"][keys["touch"].length - 1].action !== "end")
             keys["touch"] = [keys["touch"][keys["touch"].length - 1]];
         
-        if (keys["touch"].length && player.velX < 0 && keys["touch"][keys["touch"].length - 1].action !== "end")
+        if (keys["touch"] && keys["touch"].length && player.velX < 0 && keys["touch"][keys["touch"].length - 1].action !== "end")
             player.velX = 0;
 
         // right arrow means set x to greater than width
-        if (keys["touch"][keys["touch"].length - 1].action === "end")
+        if (keys["touch"] && keys["touch"][keys["touch"].length - 1].action === "end")
             keys["touch"][keys["touch"].length - 1].x = width + 10000;
 
         // right arrow
@@ -307,14 +307,14 @@ function update() {
     if (keys[37] && player.jumping || keys["touch"] && keys["touch"].length && player.jumping && (player.x > keys["touch"][keys["touch"].length - 1].x - 52)) { 
         
         // remove everything else from the keys array - we don't need it
-        if (keys["touch"].length > 1 && keys["touch"][keys["touch"].length - 1].action !== "end")
+        if (keys["touch"] && keys["touch"].length > 1 && keys["touch"][keys["touch"].length - 1].action !== "end")
             keys["touch"] = [keys["touch"][keys["touch"].length - 1]];
 
-        if (keys["touch"].length && player.velX > 0 && keys["touch"][keys["touch"].length - 1].action !== "end")
+        if (keys["touch"] && keys["touch"].length && player.velX > 0 && keys["touch"][keys["touch"].length - 1].action !== "end")
             player.velX = 0;
 
         // left arrow means set x to less than 0
-        if (keys["touch"][keys["touch"].length - 1].action === "end")
+        if (keys["touch"] && keys["touch"][keys["touch"].length - 1].action === "end")
             keys["touch"][keys["touch"].length - 1].x = -10000;
         
         // left arrow
