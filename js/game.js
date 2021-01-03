@@ -205,11 +205,28 @@ function generateBasicPlatform(init) {
     var newItemY = boxes.length ? boxes[boxes.length - 1].y - Math.random() * 150.0 - (init ? 100 : 0) : height - 100 - (init ? 100 : 0);
 
     var newItemX = Math.random() * (width - 30);
+    var newItemW = Math.random() * 100 + 30;
+
+    if (boxes.length) {
+        // ensure the platform below this is not totally covered by this platform
+        var bottomLeftEdge = boxes[boxes.length - 1].x;
+        var bottomRightEdge = boxes[boxes.length - 1].x + boxes[boxes.length - 1].width;
+
+        var topLeftEdge = newItemX;
+        var topRightEdge = newItemX + newItemW;
+
+        if (topLeftEdge < bottomLeftEdge && topRightEdge > bottomRightEdge) {
+            // adjust one of the platforms
+            if (topLeftEdge < 150) {
+                newItemX = 20;
+            } else {
+                newItemX = 200;
+            }
+        }
+    }
 
     if (!init && newItemY > 0)
         newItemY = 0;
-
-    var newItemW = Math.random() * 100 + 30;
 
     boxes.push({
         x: newItemX,
