@@ -10,66 +10,7 @@
         <link rel="icon" type="image/png" sizes="32x32" href="/fav/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="/fav/favicon-16x16.png">
         <link rel="manifest" href="/fav/site.webmanifest">
-        <style>
-            @font-face {
-                font-family: 'SplatRegular';
-                src: url('/css/Splatfont2.ttf') format('truetype');
-                font-weight: normal;
-                font-style: normal;
-            }
-            * {
-                -webkit-touch-callout: none; /* iOS Safari */
-                -webkit-user-select: none; /* Safari */
-                -khtml-user-select: none; /* Konqueror HTML */
-                -moz-user-select: none; /* Firefox */
-                -ms-user-select: none; /* Internet Explorer/Edge */
-                user-select: none; /* Non-prefixed version, currently
-                                            supported by Chrome and Opera */
-            }
-            canvas {
-                padding: 0;
-                margin: auto;
-                display: block;
-                width: 300px;
-                margin-top: 10px;
-            }
-            h3, h4 {
-                padding: 0;
-                margin: auto;
-                display: block;
-                width: 300px;
-                margin-top: 10px;
-                font-family: "SplatRegular";
-                text-align: center;
-                position: relative;
-            }
-            ul {
-                font-family: "SplatRegular";
-                padding: 0;
-                margin: auto;
-                display: block;
-                width: 300px;
-                padding-left: 60px;
-            }
-            p {
-                font-family: "SplatRegular";
-                padding: 0;
-                margin: auto;
-                display: block;
-                max-width: 300px;
-                text-align: center;
-            }
-            #share, #retry {
-                font-family: "SplatRegular";
-                padding: 0;
-                margin: auto;
-                display: block;
-                width: 100px;
-                margin-top:10px;
-                border: none;
-                background: #1ae1b3;
-            }
-        </style>
+        <link rel="stylesheet" href="/css/game.min.css" integrity="sha256-HE7Vfe4fSyTdoXhcGGI5h9ZpfiP2zJHczsrNuH+zTIU=">
     </head>
     <body>
         <h3>
@@ -85,7 +26,7 @@
         <h4>
             <button type="button" id="retry" style="display:none;position:absolute;left:0;top:-8px;" onclick="location.reload();">Try Again</button>
             Controls
-            <button type="button" id="share" style="display:none;position:absolute;right:0;top:-8px;" onclick="share()">Share Score</button>
+            <button type="button" id="share" style="display:none;position:absolute;right:0;top:-8px;" onclick="window.share()">Share Score</button>
         </h4>
         <ul id="desktopControls">
             <li>Space or Down Arrow: Charge jump</li>
@@ -96,6 +37,6 @@
             <li>Drag: Squid moves to finger</li>
         </ul>
         
-        <script src="/js/game.min.js"></script>
+        <script src="/js/game.min.js" integrity="sha256-7Vf6EFGDqK8Jx0Pf4h/vtMHF3EVW5G9f82iiYIesX6w="></script>
     </body>
 </html>

@@ -1,660 +1,702 @@
 (function() {
-    var requestAnimationFrame = window.requestAnimationFrame ||
-        window.mozRequestAnimationFrame ||
-        window.webkitRequestAnimationFrame ||
-        window.msRequestAnimationFrame;
+    (function() {
+        var requestAnimationFrame = window.requestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.msRequestAnimationFrame;
 
-    window.requestAnimationFrame = requestAnimationFrame;
-})();
+        window.requestAnimationFrame = requestAnimationFrame;
+    })();
 
-var debug = false;
+    var debug = false;
 
-function isTouchDevice() {
-    return 'ontouchstart' in document.documentElement;
-}
+    function isTouchDevice() {
+        return 'ontouchstart' in document.documentElement;
+    }
 
-var IS_TOUCH = isTouchDevice();
+    var IS_TOUCH = isTouchDevice(),
+        boxTypes = {
+            ROCK: 0,
+            SUCTION: 1
+        },
+        boxTypeOptions = [
+            boxTypes.SUCTION,
+            boxTypes.SUCTION,
+            boxTypes.SUCTION,
+            boxTypes.SUCTION
+        ];
 
-var canvas = document.getElementById("canvas"),
-    ctx = canvas.getContext("2d"),
-    width = 300,
-    height = IS_TOUCH ? 450 : 500,
-    canvasHeight = 500,
-    midHeight = height / 2,
-    player = {
-        x: width / 2,
-        y: height - 5,
-        width: 30,
-        height: 35,
-        speed: 4,
-        velX: 0,
-        velY: 0,
-        jumping: false,
-        jumpHold: null,
-        jumpHoldTime: null,
-        ghost: 0, // 0 = no ghost, 1 = left ghost
-        grounded: false,
-        dead: false,
-        score: 0
-    },
-    splashAnimation = {
-        x: 0,
-        y: 100,
-        width: 120,
-        height: 57,
-        started: null
-    },
-    keys = [],
-    friction = 0.8,
-    gravity = IS_TOUCH ? 0.13 : 0.2,
-    bottomIsDeath = false;
+    var canvas = document.getElementById("canvas"),
+        ctx = canvas.getContext("2d"),
+        width = 300,
+        height = IS_TOUCH ? 450 : 500,
+        canvasHeight = 500,
+        midHeight = height / 2,
+        player = {
+            x: width / 2,
+            y: height - 5,
+            width: 30,
+            height: 35,
+            speed: 4,
+            velX: 0,
+            velY: 0,
+            jumping: false,
+            jumpHold: null,
+            jumpHoldTime: null,
+            ghost: 0, // 0 = no ghost, 1 = left ghost
+            grounded: false,
+            dead: false,
+            score: 0
+        },
+        splashAnimation = {
+            x: 0,
+            y: 100,
+            width: 120,
+            height: 57,
+            started: null
+        },
+        keys = [],
+        friction = 0.8,
+        gravity = IS_TOUCH ? 0.13 : 0.2,
+        bottomIsDeath = false;
 
-canvas.width = width;
-canvas.height = canvasHeight;
+    canvas.width = width;
+    canvas.height = canvasHeight;
 
-// normal squid
-var squidNeutral = new Image();
+    // normal squid
+    var squidNeutral = new Image();
 
-squidNeutral.src = "/css/img/squid.png";
-squidNeutral.width = 30;
-squidNeutral.height = 35;
+    squidNeutral.src = "/css/img/squid.png";
+    squidNeutral.width = 30;
+    squidNeutral.height = 35;
 
-// focus 1 squid
-var squidFocus1 = new Image();
+    // focus 1 squid
+    var squidFocus1 = new Image();
 
-squidFocus1.src = "/css/img/squidJump1.png";
-squidFocus1.width = 30;
-squidFocus1.height = 35;
+    squidFocus1.src = "/css/img/squidJump1.png";
+    squidFocus1.width = 30;
+    squidFocus1.height = 35;
 
-// focus 2 squid
-var squidFocus2 = new Image();
+    // focus 2 squid
+    var squidFocus2 = new Image();
 
-squidFocus2.src = "/css/img/squidJump2.png";
-squidFocus2.width = 30;
-squidFocus2.height = 35;
+    squidFocus2.src = "/css/img/squidJump2.png";
+    squidFocus2.width = 30;
+    squidFocus2.height = 35;
 
-// focus 3 squid
-var squidFocus3 = new Image();
+    // focus 3 squid
+    var squidFocus3 = new Image();
 
-squidFocus3.src = "/css/img/squidJump3.png";
-squidFocus3.width = 30;
-squidFocus3.height = 35;
+    squidFocus3.src = "/css/img/squidJump3.png";
+    squidFocus3.width = 30;
+    squidFocus3.height = 35;
 
-// dead squid
-var squidDead = new Image();
+    // dead squid
+    var squidDead = new Image();
 
-squidDead.src = "/css/img/squidDead.png";
-squidDead.width = 30;
-squidDead.height = 35;
+    squidDead.src = "/css/img/squidDead.png";
+    squidDead.width = 30;
+    squidDead.height = 35;
 
-// jump splash
-var splashVariant = Math.floor(Math.random() * 7);
+    // jump splash
+    var splashVariant = Math.floor(Math.random() * 7);
 
-var splash = new Image();
-splash.src = "/css/img/splash" + splashVariant + ".png";
-splash.width = 1560;
-splash.height = 57;
-splash.className = "splashImage";
+    var splash = new Image();
+    splash.src = "/css/img/splash" + splashVariant + ".png";
+    splash.width = 1560;
+    splash.height = 57;
+    splash.className = "splashImage";
 
-var myscore = 0;
+    var myscore = 0;
 
-// background
-var hexGradients = [
-    "#F0ECDB", // 50
-    "#F0F0DB",
-    "#ECF0DB",
-    "#E9F0DB",
-    "#E6F0DB",
-    "#E2F0DB",
-    "#DFF0DB",
-    "#DBF0DB",
-    "#DBF0DF",
-    "#DBF0E2",
-    "#DBF0E6",
-    "#DBF0E9",
-    "#DBF0EC",
-    "#DBF0F0",
-    "#DBECF0",
-    "#DBE9F0",
-    "#DBE6F0",
-    "#DBE2F0",
-    "#DBDFF0",
-    "#DBDBF0",
-    "#DFDBF0",
-    "#E2DBF0",
-    "#E6DBF0",
-    "#E9DBF0",
-    "#ECDBF0",
-    "#F0DBF0",
-    "#F0DBEC",
-    "#F0DBE9",
-    "#F0DBE6",
-    "#F0DBE2",
-    "#F0DBDF",
-    "#F0DBDB",
-    "#F0DFDB",
-    "#F0E2DB",
-    "#F0E6DB",
-    "#F0E9DB"
-];
+    // background
+    var hexGradients = [
+        "#F0ECDB", // 50
+        "#F0F0DB",
+        "#ECF0DB",
+        "#E9F0DB",
+        "#E6F0DB",
+        "#E2F0DB",
+        "#DFF0DB",
+        "#DBF0DB",
+        "#DBF0DF",
+        "#DBF0E2",
+        "#DBF0E6",
+        "#DBF0E9",
+        "#DBF0EC",
+        "#DBF0F0",
+        "#DBECF0",
+        "#DBE9F0",
+        "#DBE6F0",
+        "#DBE2F0",
+        "#DBDFF0",
+        "#DBDBF0",
+        "#DFDBF0",
+        "#E2DBF0",
+        "#E6DBF0",
+        "#E9DBF0",
+        "#ECDBF0",
+        "#F0DBF0",
+        "#F0DBEC",
+        "#F0DBE9",
+        "#F0DBE6",
+        "#F0DBE2",
+        "#F0DBDF",
+        "#F0DBDB",
+        "#F0DFDB",
+        "#F0E2DB",
+        "#F0E6DB",
+        "#F0E9DB"
+    ];
 
-var boxes = [];
+    var boxes = [];
 
-generateBasicPlatform(true);
-generateBasicPlatform(true);
-generateBasicPlatform(true);
+    generateBasicPlatform(true);
+    generateBasicPlatform(true);
+    generateBasicPlatform(true);
 
-var lastFrame = Date.now() - 1;
-var thisFrame = Date.now();
-
-
-
-function frameRate() {
+    var lastFrame = Date.now() - 1;
     var thisFrame = Date.now();
 
-    var delta = Math.floor(1000 / (thisFrame - lastFrame));
 
-    lastFrame = thisFrame;
 
-    if (debug) {
-        ctx.font = '12px SplatRegular';
-        ctx.fillText(delta + " fps", 10, 16);
+    function frameRate() {
+        var thisFrame = Date.now();
+
+        var delta = Math.floor(1000 / (thisFrame - lastFrame));
+
+        lastFrame = thisFrame;
+
+        if (debug) {
+            ctx.font = '12px SplatRegular';
+            ctx.fillText(delta + " fps", 10, 16);
+        }
     }
-}
 
-function setScore() {
-    ctx.font = '16px SplatRegular';
-    ctx.fillStyle = "black";
-    ctx.fillText("Score: " + player.score.toString().padStart(4, "0"), width - 100, 20);
-    // ctx.strokeStyle = "black";
-    // ctx.strokeText("Score: " + player.score.toString().padStart(4, "0"), width - 100, 20);
-}
+    function setScore() {
+        ctx.font = '16px SplatRegular';
+        ctx.fillStyle = "black";
+        ctx.fillText("Score: " + player.score.toString().padStart(4, "0"), width - 100, 20);
+        // ctx.strokeStyle = "black";
+        // ctx.strokeText("Score: " + player.score.toString().padStart(4, "0"), width - 100, 20);
+    }
 
-const SPLASH_ANIMATION_FRAME_RATE = 15;
+    const SPLASH_ANIMATION_FRAME_RATE = 15;
 
-function animateSplash() {
-    if (splashAnimation.started) {
-        var currentFrame = Math.floor((thisFrame - splashAnimation.started) / SPLASH_ANIMATION_FRAME_RATE);
+    function animateSplash() {
+        if (splashAnimation.started) {
+            var currentFrame = Math.floor((thisFrame - splashAnimation.started) / SPLASH_ANIMATION_FRAME_RATE);
 
-        if (currentFrame > 11)
-            splashAnimation.started = null;
+            if (currentFrame > 11)
+                splashAnimation.started = null;
 
-        ctx.drawImage(splash, 
-            // selection
-            // sx, sy, sWidth, sHeight
-            currentFrame * splashAnimation.width, 0, splashAnimation.width, splashAnimation.height,
-            // draw at
-            // dx, dy dWidth, dHeight
-            splashAnimation.x, splashAnimation.y, splashAnimation.width, splashAnimation.height);
-
-            // we need 2 splashes to control
-        if (splashAnimation.x > width - 120) {
-            // splash on left, original is positive
-            // splashAnimation.x - width = p positive distance from 0
-            // splashAnimation.width - p = inverse position
-            var actualPosition = splashAnimation.width + splashAnimation.x - width;
             ctx.drawImage(splash, 
                 // selection
                 // sx, sy, sWidth, sHeight
-                currentFrame * splashAnimation.width + splashAnimation.width - actualPosition, 0, actualPosition, splashAnimation.height,
+                currentFrame * splashAnimation.width, 0, splashAnimation.width, splashAnimation.height,
                 // draw at
                 // dx, dy dWidth, dHeight
-                0, splashAnimation.y, actualPosition, splashAnimation.height);
-        }
-    }
-}
+                splashAnimation.x, splashAnimation.y, splashAnimation.width, splashAnimation.height);
 
-function generateBasicPlatform(init) {
-    var newItemY = boxes.length ? boxes[boxes.length - 1].y - Math.random() * 150.0 - (init ? 100 : 0) : height - 100 - (init ? 100 : 0);
-
-    var newItemX = Math.random() * (width - 30);
-    var newItemW = Math.random() * 100 + 30;
-
-    if (boxes.length) {
-        // ensure the platform below this is not totally covered by this platform
-        var bottomLeftEdge = boxes[boxes.length - 1].x;
-        var bottomRightEdge = boxes[boxes.length - 1].x + boxes[boxes.length - 1].width;
-
-        var topLeftEdge = newItemX;
-        var topRightEdge = newItemX + newItemW;
-
-        if (topLeftEdge < bottomLeftEdge && topRightEdge > bottomRightEdge) {
-            // adjust one of the platforms
-            if (topLeftEdge < 150) {
-                newItemX = 20;
-            } else {
-                newItemX = 200;
+                // we need 2 splashes to control
+            if (splashAnimation.x > width - 120) {
+                // splash on left, original is positive
+                // splashAnimation.x - width = p positive distance from 0
+                // splashAnimation.width - p = inverse position
+                var actualPosition = splashAnimation.width + splashAnimation.x - width;
+                ctx.drawImage(splash, 
+                    // selection
+                    // sx, sy, sWidth, sHeight
+                    currentFrame * splashAnimation.width + splashAnimation.width - actualPosition, 0, actualPosition, splashAnimation.height,
+                    // draw at
+                    // dx, dy dWidth, dHeight
+                    0, splashAnimation.y, actualPosition, splashAnimation.height);
             }
         }
     }
 
-    if (!init && newItemY > 0)
-        newItemY = 0;
-
-    boxes.push({
-        x: newItemX,
-        y: newItemY,
-        width: newItemW,
-        height: 5,
-        count: boxes.length ? boxes[boxes.length - 1].count + 1 : 1
-    });
-}
-
-function update() {
-    thisFrame = Date.now();
-
-    if (player.dead) {
-        ctx.font = '60px SplatRegular';
-        ctx.fillText('Game Over', 10, 100, width - 20);
-
-        frameRate();
-
-        myscore = player.score;
-
-        document.getElementById("share").style.display = "";
-        document.getElementById("retry").style.display = "";
-
-        return;
-    }
-
-    var hasTouchAction = false,
-        firstTouchAction = null,
-        lastTouchAction = null;
     
-    if (keys["touch"] && keys["touch"].length) {
-        hasTouchAction = true;
-        firstTouchAction = keys["touch"][0];
-        lastTouchAction = keys["touch"][keys["touch"].length - 1];
-    }
 
-    // jump hold (space, down arrow, touch up)
-    if (keys[40] || keys[32] || (hasTouchAction && lastTouchAction.action !== "end" && !firstTouchAction.wasJumping)) {
-        // up arrow or space
-        if (!player.jumping && !player.jumpHold) {
-            player.jumpHold = Math.round(Date.now() / 1);
-            player.jumpHoldTime = null;
-            if (debug)
-                console.log("holding");
-        }
-    } else {
-        if (!player.jumping) {
-            if (player.jumpHold !== null && player.jumpHoldTime === null) {
-                if (debug)
-                    console.log("jumping");
+    function generateBasicPlatform(init) {
+        var newItemY = boxes.length ? boxes[boxes.length - 1].y - Math.random() * 150.0 - (init ? 100 : 0) : height - 100 - (init ? 100 : 0);
 
-                player.jumping = true;
-                player.grounded = false;
-                player.jumpHoldTime = Math.round(Date.now() / 1) - player.jumpHold;
-    
-                if (IS_TOUCH) {
-                    if (player.jumpHoldTime > 1500)
-                        player.jumpHoldTime = 800;
-                    else if (player.jumpHoldTime < 500)
-                        player.jumpHoldTime = 400;
-                    else 
-                        player.jumpHoldTime = ((player.jumpHoldTime - 500) / 1000) * 400 + 400;
+        var newItemX = Math.random() * (width - 30);
+        var newItemW = Math.random() * 100 + 30;
+
+        if (boxes.length) {
+            // ensure the platform below this is not totally covered by this platform
+            var bottomLeftEdge = boxes[boxes.length - 1].x;
+            var bottomRightEdge = boxes[boxes.length - 1].x + boxes[boxes.length - 1].width;
+
+            var topLeftEdge = newItemX;
+            var topRightEdge = newItemX + newItemW;
+
+            if (topLeftEdge < bottomLeftEdge && topRightEdge > bottomRightEdge) {
+                // adjust one of the platforms
+                if (topLeftEdge < 150) {
+                    newItemX = 20;
                 } else {
-                    if (player.jumpHoldTime > 1000)
-                        player.jumpHoldTime = 1000;
-                    else if (player.jumpHoldTime < 500)
-                        player.jumpHoldTime = 500;
+                    newItemX = 200;
                 }
-                
-
-                player.jumpHoldTime = player.speed * (player.jumpHoldTime / (IS_TOUCH ? 700 : 650));
-                
-                player.jumpHold = null;
-    
-                player.y -= 1;
-                player.velY = player.jumpHoldTime * -2;
-
-                // begin splash animation
-                splashAnimation.started = thisFrame;
-                splashAnimation.x = player.x - 45;
-
-                if (splashAnimation.x < 0)
-                    splashAnimation.x = width - Math.abs(splashAnimation.x);
-
-                splashAnimation.y = player.y - 18;
-            } else if (player.jumpHold === null && player.jumpHoldTime !== null) {
-                if (debug)
-                    console.log("resetting");
-
-                player.jumpHoldTime = null;
             }
         }
+
+        if (!init && newItemY > 0)
+            newItemY = 0;
+
+        var count = boxes.length ? boxes[boxes.length - 1].count + 1 : 1;
+
+        if (count !== 0 && count % 20 === 0)
+            boxTypeOptions.push(boxTypes.ROCK);
+
+        var type = boxTypeOptions[Math.floor(Math.random() * boxTypeOptions.length)];
+
+        boxes.push({
+            x: newItemX,
+            y: newItemY,
+            width: newItemW,
+            height: 5,
+            count: count,
+            type: type
+        });
     }
 
-    // right arrow or right direction
-    if (keys[39] && player.jumping || hasTouchAction && player.jumping && (player.x + player.width / 2 - 2 < lastTouchAction.x - (window.innerWidth / 2 - width / 2))) { 
-        // // remove everything else from the keys array - we don't need it
-        if (hasTouchAction && keys["touch"].length > 1 && lastTouchAction.action !== "end")
-            keys["touch"] = [lastTouchAction];
+    function update() {
+        thisFrame = Date.now();
+
+        if (player.dead) {
+            ctx.font = '60px SplatRegular';
+            ctx.fillText('Game Over', 10, 100, width - 20);
+
+            frameRate();
+
+            myscore = player.score;
+
+            document.getElementById("share").style.display = "";
+            document.getElementById("retry").style.display = "";
+
+            return;
+        }
+
+        var hasTouchAction = false,
+            firstTouchAction = null,
+            lastTouchAction = null;
         
-        if (hasTouchAction && player.velX < 0 && lastTouchAction.action !== "end")
-            player.velX = 0;
-
-        if (player.velX < player.speed) {
-            player.velX++;
+        if (keys["touch"] && keys["touch"].length) {
+            hasTouchAction = true;
+            firstTouchAction = keys["touch"][0];
+            lastTouchAction = keys["touch"][keys["touch"].length - 1];
         }
-    }
 
-    // left arrow or left direction
-    if (keys[37] && player.jumping || hasTouchAction && player.jumping && (player.x + player.width / 2 + 2 > lastTouchAction.x - (window.innerWidth / 2 - width / 2))) { 
+        // jump hold (space, down arrow, touch up)
+        if (keys[40] || keys[32] || (hasTouchAction && lastTouchAction.action !== "end" && !firstTouchAction.wasJumping)) {
+            // up arrow or space
+            if (!player.jumping && !player.jumpHold) {
+                player.jumpHold = Math.round(Date.now() / 1);
+                player.jumpHoldTime = null;
+                if (debug)
+                    console.log("holding");
+            }
+        } else {
+            if (!player.jumping) {
+                if (player.jumpHold !== null && player.jumpHoldTime === null) {
+                    if (debug)
+                        console.log("jumping");
+
+                    player.jumping = true;
+                    player.grounded = false;
+                    player.jumpHoldTime = Math.round(Date.now() / 1) - player.jumpHold;
         
-        // remove everything else from the keys array - we don't need it
-        if (hasTouchAction && keys["touch"].length > 1 && lastTouchAction.action !== "end")
-            keys["touch"] = [lastTouchAction];
+                    if (IS_TOUCH) {
+                        if (player.jumpHoldTime > 1500)
+                            player.jumpHoldTime = 800;
+                        else if (player.jumpHoldTime < 500)
+                            player.jumpHoldTime = 400;
+                        else 
+                            player.jumpHoldTime = ((player.jumpHoldTime - 500) / 1000) * 400 + 400;
+                    } else {
+                        if (player.jumpHoldTime > 1000)
+                            player.jumpHoldTime = 1000;
+                        else if (player.jumpHoldTime < 500)
+                            player.jumpHoldTime = 500;
+                    }
 
-        if (hasTouchAction && player.velX > 0 && lastTouchAction.action !== "end")
-            player.velX = 0;
-
-        if (player.velX > -player.speed) {
-            player.velX--;
-        }
-    }
-
-    player.velX *= friction;
-    player.velY += gravity;
-
-    ctx.clearRect(0, 0, width, canvasHeight);
-
-    if (IS_TOUCH) {
-        ctx.fillStyle = "gray";
-        ctx.fillRect(0, height, width, canvasHeight - height);
-    }
-
-    // 9999 / gradients = distance per gradient
-    // floor(score / distance) = item (with overflow)
-    // item % gradients = item to use
-    var dG = 300  / hexGradients.length;
-    var iG = Math.floor(player.score / dG);
-    var iI = iG % hexGradients.length;
-    ctx.fillStyle = hexGradients[iI];
-    ctx.fillRect(0, 0, width, height);
-
-    ctx.fillStyle = "black";
-    ctx.beginPath();
-    
-    player.grounded = false;
-
-    var playerGhost = null;
-
-    if (player.ghost)
-        playerGhost = {
-            x: 0,
-            y: player.y,
-            width: player.width + player.x - width,
-            height: player.height
-        };
-
-    for (var i = 0; i < boxes.length; i++) {
-        ctx.rect(boxes[i].x, boxes[i].y, boxes[i].width, boxes[i].height);
+                    player.jumpHoldTime = player.speed * (player.jumpHoldTime / (IS_TOUCH ? 700 : 650));
+                    
+                    player.jumpHold = null;
         
-        var dir = colCheck(player, boxes[i]);
+                    player.y -= 1;
+                    player.velY = player.jumpHoldTime * -2;
 
-        var ghostDir = null;
+                    // begin splash animation
+                    splashAnimation.started = thisFrame;
+                    splashAnimation.x = player.x - 45;
 
-        if (playerGhost)
-            ghostDir = colCheck(playerGhost, boxes[i]);
+                    if (splashAnimation.x < 0)
+                        splashAnimation.x = width - Math.abs(splashAnimation.x);
 
-        if (dir === "l" || dir === "r" || ghostDir === "l" || ghostDir === "r") {
-            player.velX = 0;
-        } else if (dir === "b" || ghostDir === "b") {
-            player.grounded = true;
-            player.jumping = false;
-            player.y = boxes[i].y - player.height;
-        } else if (dir === "t" || ghostDir === "t") {
-            player.velY *= -1;
+                    splashAnimation.y = player.y - 18;
+                } else if (player.jumpHold === null && player.jumpHoldTime !== null) {
+                    if (debug)
+                        console.log("resetting");
+
+                    player.jumpHoldTime = null;
+                }
+            }
         }
-    }
 
-    ctx.fill();
-    
-    if(player.grounded) {
-         player.velY = 0;
-    }
+        // right arrow or right direction
+        if (keys[39] && player.jumping || hasTouchAction && player.jumping && (player.x + player.width / 2 - 2 < lastTouchAction.x - (window.innerWidth / 2 - width / 2))) { 
+            // // remove everything else from the keys array - we don't need it
+            if (hasTouchAction && keys["touch"].length > 1 && lastTouchAction.action !== "end")
+                keys["touch"] = [lastTouchAction];
+            
+            if (hasTouchAction && player.velX < 0 && lastTouchAction.action !== "end")
+                player.velX = 0;
 
-    player.x += player.velX;
-    player.y += player.velY;
-
-    if (player.x < 0) {
-        // adjust player to right side of screen
-        player.x = width + player.x;
-    } else if (player.x > width) {
-        // adjust player to left side of screen
-        player.x = player.x - width;
-    }
-
-    if (player.x < 0 && player.x > -1 * player.width) {
-        player.ghost = 1;
-        player.x = width - Math.abs(player.x);
-    } else if (player.x > width - player.width && player.x < width + player.width) {
-        player.ghost = 1;
-    } else {
-        player.ghost = 0;
-    }
-
-    if (hasTouchAction && player.jumping) {
-        firstTouchAction.wasJumping = true;
-    }
-
-    if (player.y >= height - player.height) {
-        player.y = height - player.height;
-        player.jumping = false;
-
-        if (hasTouchAction && lastTouchAction.action === "end")
-            keys["touch"] = null;
-
-        if (bottomIsDeath) {
-            player.dead = true;
+            if (player.velX < player.speed) {
+                player.velX++;
+            }
         }
-    }
 
-    if (player.y <= midHeight) {
-        // the floor is death
-        bottomIsDeath = true;
+        // left arrow or left direction
+        if (keys[37] && player.jumping || hasTouchAction && player.jumping && (player.x + player.width / 2 + 2 > lastTouchAction.x - (window.innerWidth / 2 - width / 2))) { 
+            
+            // remove everything else from the keys array - we don't need it
+            if (hasTouchAction && keys["touch"].length > 1 && lastTouchAction.action !== "end")
+                keys["touch"] = [lastTouchAction];
 
-        // player is above mid, shift everything down by difference between player height and mid
-        var amountToShift = player.y - midHeight;
-        player.y = midHeight;
+            if (hasTouchAction && player.velX > 0 && lastTouchAction.action !== "end")
+                player.velX = 0;
+
+            if (player.velX > -player.speed) {
+                player.velX--;
+            }
+        }
+
+        player.velX *= friction;
+        player.velY += gravity;
+
+        ctx.clearRect(0, 0, width, canvasHeight);
+
+        if (IS_TOUCH) {
+            ctx.fillStyle = "gray";
+            ctx.fillRect(0, height, width, canvasHeight - height);
+        }
+
+        // 9999 / gradients = distance per gradient
+        // floor(score / distance) = item (with overflow)
+        // item % gradients = item to use
+        var dG = 300  / hexGradients.length;
+        var iG = Math.floor(player.score / dG);
+        var iI = iG % hexGradients.length;
+        ctx.fillStyle = hexGradients[iI];
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        
+        player.grounded = false;
+
+        var playerGhost = null;
+
+        if (player.ghost)
+            playerGhost = {
+                x: 0,
+                y: player.y,
+                width: player.width + player.x - width,
+                height: player.height
+            };
 
         for (var i = 0; i < boxes.length; i++) {
-            boxes[i].y -= amountToShift;
-        }
+            switch (boxes[i].type) {
+                case boxTypes.SUCTION:
+                    ctx.fillStyle = "orange";
+                    break;
+                case boxTypes.ROCK:
+                    ctx.fillStyle = "black";
+                    break;
+                default:
+                    ctx.fillStyle = "black";
+                    break;
+            }
+
+            ctx.rect(boxes[i].x, boxes[i].y, boxes[i].width, boxes[i].height);
+
+            ctx.fill();
+            ctx.beginPath();
             
-        if (boxes[0].y > height) {
-            // shift this box and add a new one
-            boxes.shift();
+            var dir = colCheck(player, boxes[i]);
 
-            generateBasicPlatform();
+            var ghostDir = null;
+
+            if (playerGhost)
+                ghostDir = colCheck(playerGhost, boxes[i]);
+
+            if (dir === "l" || dir === "r" || ghostDir === "l" || ghostDir === "r") {
+                player.velX = 0;
+            } else if (dir === "b" || ghostDir === "b") {
+                player.grounded = true;
+                player.jumping = false;
+                player.y = boxes[i].y - player.height;
+            } else if (dir === "t" || ghostDir === "t") {
+                player.velY *= -1;
+            }
+        }
+        
+        if(player.grounded) {
+            player.velY = 0;
         }
 
-        splashAnimation.y -= amountToShift;
-        
-    }
+        player.x += player.velX;
+        player.y += player.velY;
 
-    var activeSquid,
-        activeSquidGhost;
+        if (player.x < 0) {
+            // adjust player to right side of screen
+            player.x = width + player.x;
+        } else if (player.x > width) {
+            // adjust player to left side of screen
+            player.x = player.x - width;
+        }
 
-    if (player.dead) {
-        activeSquid = squidDead;
-        activeSquidGhost = squidDead;
-    } else if (!player.jumping) {
-        if (player.jumpHold) {
-            var jumpHoldTime = Math.round(Date.now() / 1) - player.jumpHold;
+        if (player.x < 0 && player.x > -1 * player.width) {
+            player.ghost = 1;
+            player.x = width - Math.abs(player.x);
+        } else if (player.x > width - player.width && player.x < width + player.width) {
+            player.ghost = 1;
+        } else {
+            player.ghost = 0;
+        }
 
-            if (!IS_TOUCH && jumpHoldTime > 1000 || IS_TOUCH && jumpHoldTime > 1500) {
-                activeSquid = squidFocus3;
-                activeSquidGhost = squidFocus3;
-            } else if (jumpHoldTime < 500) {
-                activeSquid = squidFocus1;
-                activeSquidGhost = squidFocus1;
+        if (hasTouchAction && player.jumping) {
+            firstTouchAction.wasJumping = true;
+        }
+
+        if (player.y >= height - player.height) {
+            player.y = height - player.height;
+            player.jumping = false;
+
+            if (hasTouchAction && lastTouchAction.action === "end")
+                keys["touch"] = null;
+
+            if (bottomIsDeath) {
+                player.dead = true;
+            }
+        }
+
+        if (player.y <= midHeight) {
+            // the floor is death
+            bottomIsDeath = true;
+
+            // player is above mid, shift everything down by difference between player height and mid
+            var amountToShift = player.y - midHeight;
+            player.y = midHeight;
+
+            for (var i = 0; i < boxes.length; i++) {
+                boxes[i].y -= amountToShift;
+            }
+                
+            if (boxes[0].y > height) {
+                // shift this box and add a new one
+                boxes.shift();
+
+                generateBasicPlatform();
+            }
+
+            splashAnimation.y -= amountToShift;
+            
+        }
+
+        var activeSquid,
+            activeSquidGhost;
+
+        if (player.dead) {
+            activeSquid = squidDead;
+            activeSquidGhost = squidDead;
+        } else if (!player.jumping) {
+            if (player.jumpHold) {
+                var jumpHoldTime = Math.round(Date.now() / 1) - player.jumpHold;
+
+                if (!IS_TOUCH && jumpHoldTime > 1000 || IS_TOUCH && jumpHoldTime > 1500) {
+                    activeSquid = squidFocus3;
+                    activeSquidGhost = squidFocus3;
+                } else if (jumpHoldTime < 500) {
+                    activeSquid = squidFocus1;
+                    activeSquidGhost = squidFocus1;
+                } else {
+                    activeSquid = squidFocus2;
+                    activeSquidGhost = squidFocus2;
+                }
             } else {
-                activeSquid = squidFocus2;
-                activeSquidGhost = squidFocus2;
+                activeSquid = squidNeutral;
+                activeSquidGhost = squidNeutral;
             }
         } else {
             activeSquid = squidNeutral;
             activeSquidGhost = squidNeutral;
         }
-    } else {
-        activeSquid = squidNeutral;
-        activeSquidGhost = squidNeutral;
-    }
 
-    if (player.jumping)
-        animateSplash();
+        if (player.jumping)
+            animateSplash();
 
-    ctx.drawImage(activeSquid, player.x, player.y, squidNeutral.width, squidNeutral.height);
+        ctx.drawImage(activeSquid, player.x, player.y, squidNeutral.width, squidNeutral.height);
 
-    if (player.ghost !== 0) {
-        // we need 2 players to control
-        if (player.ghost === 1) {
-            // ghost on left, original is positive
-            // player.x - width = p positive distance from 0
-            // player.width - p = inverse position
-            var actualPosition = player.width + player.x - width;
-            var hSize = (actualPosition / squidNeutral.width) * 100;
-            ctx.drawImage(activeSquidGhost, 
-                // selection
-                // sx, sy, sWidth, sHeight
-                100 - hSize, 0, hSize, 117,
-                // draw at
-                // dx, dy dWidth, dHeight
-                0, player.y, actualPosition, squidNeutral.height);
-        }
-    }
-
-    if (bottomIsDeath) {
-        ctx.fillStyle = "#5555ff";
-        ctx.fillRect(0, height - 4, width, 4);
-    }
-
-    frameRate();
-    setScore();
-
-    requestAnimationFrame(update);
-}
-
-function colCheck(shapeA, shapeB) {
-    // get the vectors to check against
-    var vX = (shapeA.x + (shapeA.width / 2)) - (shapeB.x + (shapeB.width / 2)),
-        vY = (shapeA.y + (shapeA.height / 2)) - (shapeB.y + (shapeB.height / 2)),
-        // add the half widths and half heights of the objects
-        hWidths = (shapeA.width / 2) + (shapeB.width / 2),
-        hHeights = (shapeA.height / 2) + (shapeB.height / 2),
-        colDir = null;
-
-    // if the x and y vector are less than the half width or half height, they we must be inside the object, causing a collision
-    if (Math.abs(vX) < hWidths && Math.abs(vY) < hHeights) {
-        // figures out on which side we are colliding (top, bottom, left, or right)
-        var oX = hWidths - Math.abs(vX),
-            oY = hHeights - Math.abs(vY);
-        if (oX >= oY) {
-            if (vY > 0) {
-                colDir = "t";
-                shapeA.y += oY;
-            } else {
-                colDir = "b";
-                shapeA.y -= oY;
-                
-                if (player.score < shapeB.count)
-                    player.score = shapeB.count;
-            }
-        } else {
-            if (vX > 0) {
-                colDir = "l";
-                shapeA.x += oX;
-            } else {
-                colDir = "r";
-                shapeA.x -= oX;
+        if (player.ghost !== 0) {
+            // we need 2 players to control
+            if (player.ghost === 1) {
+                // ghost on left, original is positive
+                // player.x - width = p positive distance from 0
+                // player.width - p = inverse position
+                var actualPosition = player.width + player.x - width;
+                var hSize = (actualPosition / squidNeutral.width) * 100;
+                ctx.drawImage(activeSquidGhost, 
+                    // selection
+                    // sx, sy, sWidth, sHeight
+                    100 - hSize, 0, hSize, 117,
+                    // draw at
+                    // dx, dy dWidth, dHeight
+                    0, player.y, actualPosition, squidNeutral.height);
             }
         }
+
+        if (bottomIsDeath) {
+            ctx.fillStyle = "#5555ff";
+            ctx.fillRect(0, height - 4, width, 4);
+        }
+
+        frameRate();
+        setScore();
+
+        requestAnimationFrame(update);
     }
-    return colDir;
-}
 
-document.body.addEventListener("keydown", function(e) {
-  keys[e.keyCode] = true;
-});
+    function colCheck(shapeA, shapeB) {
+        // get the vectors to check against
+        var vX = (shapeA.x + (shapeA.width / 2)) - (shapeB.x + (shapeB.width / 2)),
+            vY = (shapeA.y + (shapeA.height / 2)) - (shapeB.y + (shapeB.height / 2)),
+            // add the half widths and half heights of the objects
+            hWidths = (shapeA.width / 2) + (shapeB.width / 2),
+            hHeights = (shapeA.height / 2) + (shapeB.height / 2),
+            colDir = null;
 
-document.body.addEventListener("keyup", function(e) {
-  keys[e.keyCode] = false;
-});
+        // if the x and y vector are less than the half width or half height, they we must be inside the object, causing a collision
+        if (Math.abs(vX) < hWidths && Math.abs(vY) < hHeights) {
+            // figures out on which side we are colliding (top, bottom, left, or right)
+            var oX = hWidths - Math.abs(vX),
+                oY = hHeights - Math.abs(vY);
+            if (oX >= oY) {
+                if (vY > 0) {
+                    if (shapeB.type !== boxTypes.SUCTION) {
+                        colDir = "t";
+                        shapeA.y += oY;
+                    }
+                } else {
+                    colDir = "b";
+                    shapeA.y -= oY;
+                    
+                    if (player.score < shapeB.count)
+                        player.score = shapeB.count;
+                }
+            } else {
+                if (vX > 0) {
+                    if (shapeB.type !== boxTypes.SUCTION) {
+                        colDir = "l";
+                        shapeA.x += oX;
+                    }
+                } else {
+                    if (shapeB.type !== boxTypes.SUCTION) {
+                        colDir = "r";
+                        shapeA.x -= oX;
+                    }
+                }
+            }
+        }
+        return colDir;
+    }
 
-window.addEventListener("load", function() {
-  update();
-});
-
-function touchStart(e) {
-    e.preventDefault();
-
-    if (debug)
-        console.log("touchstart.");
-
-    var touches = e.changedTouches;
-    var touchX = touches[0].clientX,
-        touchY = touches[0].clientY;
-
-    keys["touch"] = [{
-        x: touchX,
-        y: touchY,
-        action: "start"
-    }];
-}
-
-function touchMove(e) {
-    e.preventDefault();
-
-    if (debug)
-        console.log("touchstart.");
-
-    var touches = e.changedTouches;
-    var touchX = touches[0].clientX,
-        touchY = touches[0].clientY;
-
-    //(touches);
-    
-    keys["touch"].push({
-        x: touchX,
-        y: touchY,
-        action: "move"
+    document.body.addEventListener("keydown", function(e) {
+    keys[e.keyCode] = true;
     });
-}
 
-function touchEnd(e) {
-    e.preventDefault();
-
-    if (debug)
-        console.log("touchstart.");
-
-    var touches = e.changedTouches;
-    var touchX = touches[0].clientX,
-        touchY = touches[0].clientY;
-
-    keys["touch"].push({
-        x: touchX,
-        y: touchY,
-        action: "end"
+    document.body.addEventListener("keyup", function(e) {
+    keys[e.keyCode] = false;
     });
-}
 
-canvas.addEventListener("touchstart", touchStart, false);
-canvas.addEventListener("touchmove", touchMove, false);
-canvas.addEventListener("touchend", touchEnd, false);
+    window.addEventListener("load", function() {
+    update();
+    });
 
-function share() {
-    var score = "https://twitter.com/intent/tweet?text=" + 
-        "I%20made%20it%20to%20" + 
-        myscore + 
-        "%20platforms%20on%20r/Splatoon%20Hop!%20%23rsplatoonhop%20%23Splatoon%20" + 
-        "How%20high%20can%20you%20go?%20https%3A%2F%2Fminigame.rsplatoon.com%2F";
+    function touchStart(e) {
+        e.preventDefault();
 
-    window.open(score,'_blank');
-}
+        if (debug)
+            console.log("touchstart.");
 
-if (IS_TOUCH) {
-    document.getElementById("mobileControls").style.display = "";
-    document.getElementById("desktopControls").style.display = "none";
-}
+        var touches = e.changedTouches;
+        var touchX = touches[0].clientX,
+            touchY = touches[0].clientY;
+
+        keys["touch"] = [{
+            x: touchX,
+            y: touchY,
+            action: "start"
+        }];
+    }
+
+    function touchMove(e) {
+        e.preventDefault();
+
+        if (debug)
+            console.log("touchstart.");
+
+        var touches = e.changedTouches;
+        var touchX = touches[0].clientX,
+            touchY = touches[0].clientY;
+
+        //(touches);
+        
+        keys["touch"].push({
+            x: touchX,
+            y: touchY,
+            action: "move"
+        });
+    }
+
+    function touchEnd(e) {
+        e.preventDefault();
+
+        if (debug)
+            console.log("touchstart.");
+
+        var touches = e.changedTouches;
+        var touchX = touches[0].clientX,
+            touchY = touches[0].clientY;
+
+        keys["touch"].push({
+            x: touchX,
+            y: touchY,
+            action: "end"
+        });
+    }
+
+    canvas.addEventListener("touchstart", touchStart, false);
+    canvas.addEventListener("touchmove", touchMove, false);
+    canvas.addEventListener("touchend", touchEnd, false);
+
+    function share() {
+        var score = "https://twitter.com/intent/tweet?text=" + 
+            "I%20made%20it%20to%20" + 
+            myscore + 
+            "%20platforms%20on%20r/Splatoon%20Hop!%20%23rsplatoonhop%20%23Splatoon%20" + 
+            "How%20high%20can%20you%20go?%20https%3A%2F%2Fminigame.rsplatoon.com%2F";
+
+        window.open(score,'_blank');
+    }
+
+    if (IS_TOUCH) {
+        document.getElementById("mobileControls").style.display = "";
+        document.getElementById("desktopControls").style.display = "none";
+    }
+
+    window.share = share;
+})();

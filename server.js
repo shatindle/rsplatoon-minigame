@@ -23,6 +23,7 @@ require("./pages/game")(app);
 
 if (appSettings.secure) {
     server.listen(443);
+    require("./redirect")();
 } else {
     server.listen(80);
 }
