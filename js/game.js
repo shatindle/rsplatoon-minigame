@@ -232,6 +232,7 @@ function update() {
         myscore = player.score;
 
         document.getElementById("share").style.display = "";
+        document.getElementById("retry").style.display = "";
 
         return;
     }
