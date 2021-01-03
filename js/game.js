@@ -286,7 +286,7 @@ function update() {
     }
 
     // todo: figure out what the magic number 86 is 
-    if (keys[39] && player.jumping || keys["touch"] && keys["touch"].length && player.jumping && (player.x < keys["touch"][keys["touch"].length - 1].x - 86)) { 
+    if (keys[39] && player.jumping || keys["touch"] && keys["touch"].length && player.jumping && (player.x + player.width / 2 - 2 < keys["touch"][keys["touch"].length - 1].x - (window.innerWidth / 2 - width / 2))) { 
         // // remove everything else from the keys array - we don't need it
         if (keys["touch"] && keys["touch"].length > 1 && keys["touch"][keys["touch"].length - 1].action !== "end")
             keys["touch"] = [keys["touch"][keys["touch"].length - 1]];
@@ -305,7 +305,7 @@ function update() {
     }
 
     // todo: figure out what the magic number 52 is
-    if (keys[37] && player.jumping || keys["touch"] && keys["touch"].length && player.jumping && (player.x > keys["touch"][keys["touch"].length - 1].x - 52)) { 
+    if (keys[37] && player.jumping || keys["touch"] && keys["touch"].length && player.jumping && (player.x + player.width / 2 + 2 > keys["touch"][keys["touch"].length - 1].x - (window.innerWidth / 2 - width / 2))) { 
         
         // remove everything else from the keys array - we don't need it
         if (keys["touch"] && keys["touch"].length > 1 && keys["touch"][keys["touch"].length - 1].action !== "end")
