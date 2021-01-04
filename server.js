@@ -3,6 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const appSettings = require("./settings.json");
 
+require("./compile")();
+
 const app = express();
 
 const key = appSettings.secure ? fs.readFileSync('./key.pem') : null;

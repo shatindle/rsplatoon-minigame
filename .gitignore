@@ -108,3 +108,6 @@ key.pem
 keytmp.pem
 settings.json
 package-lock.json
+game.min.html
+game.min.js
+game.min.css
