@@ -37,7 +37,7 @@
             y: height - 5,
             width: 30,
             height: 35,
-            speed: 2.2,
+            speed: IS_TOUCH ? 3 : 2.2,
             velX: 0,
             velY: 0,
             jumping: false,
@@ -57,7 +57,7 @@
         },
         keys = [],
         friction = 0.9,
-        gravity = IS_TOUCH ? 0.04 : 0.06,
+        gravity = IS_TOUCH ? 0.05 : 0.06,
         bottomIsDeath = false;
 
     canvas.width = width;
