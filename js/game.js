@@ -37,7 +37,7 @@
             y: height - 5,
             width: 30,
             height: 35,
-            speed: 4,
+            speed: IS_TOUCH ? 3 : 2.2,
             velX: 0,
             velY: 0,
             jumping: false,
@@ -56,8 +56,8 @@
             started: null
         },
         keys = [],
-        friction = 0.8,
-        gravity = IS_TOUCH ? 0.13 : 0.2,
+        friction = 0.9,
+        gravity = IS_TOUCH ? 0.05 : 0.06,
         bottomIsDeath = false;
 
     canvas.width = width;
@@ -156,10 +156,13 @@
     generateBasicPlatform(true);
 
     var lastFrame = Date.now() - 1;
+
+    // TODO: optimize this with our new frame management code
     var thisFrame = Date.now();
 
-
-
+    /** @description TODO: merge with frame handler
+     * 
+     */
     function frameRate() {
         var thisFrame = Date.now();
 
@@ -263,7 +266,32 @@
         });
     }
 
-    function update() {
+    var FRAMES_PER_SECOND = 60;  // Valid values are 60,30,20,15,10...
+    // set the mim time to render the next frame
+    var FRAME_MIN_TIME = (1000/60) * (60 / FRAMES_PER_SECOND) - (1000/60) * 0.5;
+    var lastFrameTime = 0;  // the last frame time
+    function update(time){
+        //console.log(time - lastFrameTime);
+        if(time-lastFrameTime < FRAME_MIN_TIME) { 
+            //skip the frame if the call is too early
+            requestAnimationFrame(update);
+            return;
+        }
+
+        // render the missed frames and current frame
+        for (var i = 0; i < Math.floor((time - lastFrameTime) / FRAME_MIN_TIME); i++)
+            coreGame();
+
+        lastFrameTime = time; // remember the time of the rendered frame
+
+        requestAnimationFrame(update); // get next frame
+    }
+
+    /** @description The code that should take place once per frame.  The game is intended to run at 60 fps.
+     * 
+     */
+    function coreGame() {
+
         thisFrame = Date.now();
 
         if (player.dead) {
@@ -574,8 +602,6 @@
 
         frameRate();
         setScore();
-
-        requestAnimationFrame(update);
     }
 
     function colCheck(shapeA, shapeB) {
@@ -633,7 +659,7 @@
     });
 
     window.addEventListener("load", function() {
-        update();
+        requestAnimationFrame(update);
     });
 
     function touchStart(e) {
