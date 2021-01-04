@@ -177,8 +177,6 @@
         ctx.font = '16px SplatRegular';
         ctx.fillStyle = "black";
         ctx.fillText("Score: " + player.score.toString().padStart(4, "0"), width - 100, 20);
-        // ctx.strokeStyle = "black";
-        // ctx.strokeText("Score: " + player.score.toString().padStart(4, "0"), width - 100, 20);
     }
 
     const SPLASH_ANIMATION_FRAME_RATE = 15;
@@ -257,7 +255,11 @@
             width: newItemW,
             height: 5,
             count: count,
-            type: type
+            type: type,
+            isTopSolid: type !== boxTypes.SUCTION,
+            isBottomSolid: type !== boxTypes.SUCTION,
+            isLeftSolid: type !== boxTypes.SUCTION,
+            isRightSolid: type !== boxTypes.SUCTION 
         });
     }
 
@@ -377,6 +379,7 @@
         player.velX *= friction;
         player.velY += gravity;
 
+        // begin drawing everything
         ctx.clearRect(0, 0, width, canvasHeight);
 
         if (IS_TOUCH) {
@@ -484,6 +487,12 @@
             }
         }
 
+        // suction types become concrete after the user has passed over them
+        for (var i = 0; i < boxes.length; i++) {
+            if (boxes[i].type === boxTypes.SUCTION && !boxes[i].isTopSolid && boxes[i].y > player.y + player.height)
+                boxes[i].isTopSolid = true;
+        }
+
         if (player.y <= midHeight) {
             // the floor is death
             bottomIsDeath = true;
@@ -504,7 +513,6 @@
             }
 
             splashAnimation.y -= amountToShift;
-            
         }
 
         var activeSquid,
@@ -586,25 +594,27 @@
                 oY = hHeights - Math.abs(vY);
             if (oX >= oY) {
                 if (vY > 0) {
-                    if (shapeB.type !== boxTypes.SUCTION) {
+                    if (shapeB.isBottomSolid) {
                         colDir = "t";
                         shapeA.y += oY;
                     }
                 } else {
-                    colDir = "b";
-                    shapeA.y -= oY;
-                    
-                    if (player.score < shapeB.count)
-                        player.score = shapeB.count;
+                    if (shapeB.isTopSolid) {
+                        colDir = "b";
+                        shapeA.y -= oY;
+                        
+                        if (player.score < shapeB.count)
+                            player.score = shapeB.count;
+                    }
                 }
             } else {
                 if (vX > 0) {
-                    if (shapeB.type !== boxTypes.SUCTION) {
+                    if (shapeB.isRightSolid) {
                         colDir = "l";
                         shapeA.x += oX;
                     }
                 } else {
-                    if (shapeB.type !== boxTypes.SUCTION) {
+                    if (shapeB.isLeftSolid) {
                         colDir = "r";
                         shapeA.x -= oX;
                     }
@@ -615,15 +625,15 @@
     }
 
     document.body.addEventListener("keydown", function(e) {
-    keys[e.keyCode] = true;
+        keys[e.keyCode] = true;
     });
 
     document.body.addEventListener("keyup", function(e) {
-    keys[e.keyCode] = false;
+        keys[e.keyCode] = false;
     });
 
     window.addEventListener("load", function() {
-    update();
+        update();
     });
 
     function touchStart(e) {
