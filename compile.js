@@ -3,46 +3,55 @@ const uglifyJS = require('@node-minify/uglify-es');
 const fs = require('fs');
 const uglifycss = require('uglifycss');
 const sri = require('node-sri');
+const browserify = require('browserify');
 
-module.exports = () => {
-  minify({
-    compressor: uglifyJS,
-    input: __dirname + '/js/game.js',
-    output: __dirname + '/js/game.min.js',
-    callback: function(err, min) {}
-  });
-  
-  var css = uglifycss.processFiles(
-    [ __dirname + '/css/game.css' ],
-    { maxLineLen: 500, expandVars: true }
-  );
-  
-  fs.writeFileSync(__dirname + "/css/game.min.css", css);
-  
-  var jsFile = __dirname + "/js/game.min.js";
+module.exports = async () => {
 
-  var file = fs.readFileSync(__dirname + "/pages/game.html", "utf8");
-  fs.writeFileSync(__dirname + "/pages/game.min.html", file);
+  var gamejs = fs.createWriteStream(__dirname + '/js/game.js');
+  var b = browserify();
+  b.add('./src/main.js');
+  b.bundle().pipe(gamejs).addListener("close", () => {
+    minify({
+      compressor: uglifyJS,
+      input: __dirname + '/js/game.js',
+      output: __dirname + '/js/game.min.js',
+      callback: function(err, min) {}
+    });
+    
+    var css = uglifycss.processFiles(
+      [ __dirname + '/css/game.css' ],
+      { maxLineLen: 500, expandVars: true }
+    );
+    
+    fs.writeFileSync(__dirname + "/css/game.min.css", css);
+    
+    var jsFile = __dirname + "/js/game.min.js";
   
-  sri.hash(jsFile, function(err, hash){
-    if (err) throw err
-
-    var file = fs.readFileSync(__dirname + "/pages/game.min.html", "utf8");
-    file = file.replace("##jsintegrity##", hash);
+    var file = fs.readFileSync(__dirname + "/pages/game.html", "utf8");
     fs.writeFileSync(__dirname + "/pages/game.min.html", file);
+    
+    sri.hash(jsFile, function(err, hash){
+      if (err) throw err
   
-    console.log(hash + '  ' + jsFile)
+      var file = fs.readFileSync(__dirname + "/pages/game.min.html", "utf8");
+      file = file.replace("##jsintegrity##", hash);
+      fs.writeFileSync(__dirname + "/pages/game.min.html", file);
+    
+      console.log(hash + '  ' + jsFile)
+    });
+    
+    var cssFile = __dirname + "/css/game.min.css";
+    
+    sri.hash(cssFile, function(err, hash){
+      if (err) throw err
+  
+      var file = fs.readFileSync(__dirname + "/pages/game.min.html", "utf8");
+      file = file.replace("##cssintegrity##", hash);
+      fs.writeFileSync(__dirname + "/pages/game.min.html", file);
+    
+      console.log(hash + '  ' + cssFile)
+    });
   });
-  
-  var cssFile = __dirname + "/css/game.min.css";
-  
-  sri.hash(cssFile, function(err, hash){
-    if (err) throw err
 
-    var file = fs.readFileSync(__dirname + "/pages/game.min.html", "utf8");
-    file = file.replace("##cssintegrity##", hash);
-    fs.writeFileSync(__dirname + "/pages/game.min.html", file);
   
-    console.log(hash + '  ' + cssFile)
-  });
 };
