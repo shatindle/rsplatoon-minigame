@@ -56,3 +56,37 @@ p {
     border: none;
     background: #1ae1b3;
 }
+
+#modeselect {
+    position:absolute;
+    width:305px;
+    margin:auto;
+    top:122px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    background-color: blueviolet;
+    height:500px;
+}
+
+#modeselect h3 {
+    color: white;
+    font-weight: normal;
+}
+
+#modeselect ul {
+    list-style: none;
+    text-align: center;
+    padding: 0;
+}
+
+#modeselect ul button {
+    padding: 4px 6px;
+    background-color: orange;
+    color: black;
+    font-family: "SplatRegular";
+    font-size: 14px;
+    border: none;
+    margin-top: 40px;
+    width: 150px;
+}
