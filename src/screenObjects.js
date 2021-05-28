@@ -14,9 +14,17 @@ const boxTypeOptions = [
     boxTypes.ARROW
 ];
 
+const crazyTypeOptions = [
+    boxTypes.ROCK,
+    boxTypes.ARROW,
+    boxTypes.ARROW,
+    boxTypes.ARROW,
+    boxTypes.ARROW
+];
+
 const boxes = [];
 
-function generatePlatform(init) {
+function generatePlatform(init, gameMode) {
     var newItemY = boxes.length ? boxes[boxes.length - 1].y - Math.random() * 150.0 - (init ? 100 : 0) : dimensions.height - 100 - (init ? 100 : 0);
 
     var newItemX = Math.random() * (dimensions.width - 30);
@@ -45,14 +53,35 @@ function generatePlatform(init) {
 
     var count = boxes.length ? boxes[boxes.length - 1].count + 1 : 1;
 
-    if (count !== 0 && count % 20 === 0)
+    if (gameMode === 3 && count !== 0 && count % 20 === 0)
         boxTypeOptions.push(boxTypes.ROCK);
 
     var type;
 
     do {
-        type = boxTypeOptions[Math.floor(Math.random() * boxTypeOptions.length)];
-    } while (boxes.length && type === boxTypes.ARROW && boxes[boxes.length - 1].type === boxTypes.ARROW);
+        switch (gameMode) {
+            case 1: // very fly
+                type = boxTypes.ARROW;
+            break;
+            case 2: // easy
+                type = boxTypes.SUCTION;
+            break;
+            case 3: // normal
+                type = boxTypeOptions[Math.floor(Math.random() * boxTypeOptions.length)];
+                break;
+            case 4: // hard
+                type = boxTypes.ROCK;
+            break;
+            case 5: // crazy
+                type = crazyTypeOptions[Math.floor(Math.random() * crazyTypeOptions.length)];
+            break;
+            default: 
+                type = boxTypeOptions[Math.floor(Math.random() * boxTypeOptions.length)];
+                break;
+        }
+
+        
+    } while ((gameMode === 3 && boxes.length && type === boxTypes.ARROW && boxes[boxes.length - 1].type === boxTypes.ARROW));
 
     var height = 5;
 
@@ -108,10 +137,6 @@ function generatePlatform(init) {
         adjustPlayer: adjustPlayer
     });
 }
-
-// seed the screen
-for (var i = 0; i < 3; i++)
-    generatePlatform(true);
 
 module.exports = {
     boxTypes: boxTypes,

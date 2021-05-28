@@ -150,6 +150,10 @@ var sprites = require("./sprites"),
     animations = require("./animations"),
     page = require("./page");
 
+const userSetting = {
+    difficulty: null
+};
+
 function setScore() {
     page.ctx.font = '16px SplatRegular';
     page.ctx.fillStyle = "black";
@@ -450,7 +454,7 @@ function update() {
             // shift this box and add a new one
             objects.boxes.shift();
 
-            objects.generatePlatform();
+            objects.generatePlatform(false, userSetting.difficulty);
         }
 
         animations.splash.y -= amountToShift;
@@ -581,9 +585,26 @@ document.body.addEventListener("keyup", function(e) {
     userInput.keys[e.keyCode] = false;
 });
 
-window.addEventListener("load", function() {
+var game = {
+    isStarted: false
+};
+
+window.beginGame = function(difficulty) {
+    if (game.isStarted)
+        return;
+
+    game.isStarted = true;
+
+    userSetting.difficulty = difficulty;
+
+    // seed the screen
+    for (var i = 0; i < 3; i++)
+        screenObjects.generatePlatform(true, userSetting.difficulty);
+
+    document.getElementById("modeselect").remove();
+
     update();
-});
+}
 
 function touchStart(e) {
     e.preventDefault();
@@ -643,10 +664,35 @@ page.canvas.addEventListener("touchmove", touchMove, false);
 page.canvas.addEventListener("touchend", touchEnd, false);
 
 function share() {
+    var myMode = "";
+
+    switch (userSetting.difficulty) {
+        case 1:
+            myMode = "%20Very%20Fly%20Mode%20in";
+            break;
+        case 2:
+            myMode = "%20Easy%20Mode%20in";
+            break;
+        case 3:
+            myMode = "%20Normal%20Mode%20in";
+            break;
+        case 4:
+            myMode = "%20Hard%20Mode%20in";
+            break;
+        case 5:
+            myMode = "%20Crazy%20Mode%20in";
+            break;
+        default: 
+            myMode = "%20Normal%20Mode%20in";
+            break;
+    }
+
     var score = "https://twitter.com/intent/tweet?text=" + 
         "I%20made%20it%20to%20" + 
         player.score + 
-        "%20platforms%20on%20r/Splatoon%20Hop!%20%23rsplatoonhop%20%23Splatoon%20" + 
+        "%20platforms%20on" + 
+        myMode + 
+        "%20r/Splatoon%20Hop!%20%23rsplatoonhop%20%23Splatoon%20" + 
         "How%20high%20can%20you%20go?%20https%3A%2F%2Fminigame.rsplatoon.com%2F";
 
     window.open(score,'_blank');
@@ -711,9 +757,17 @@ const boxTypeOptions = [
     boxTypes.ARROW
 ];
 
+const crazyTypeOptions = [
+    boxTypes.ROCK,
+    boxTypes.ARROW,
+    boxTypes.ARROW,
+    boxTypes.ARROW,
+    boxTypes.ARROW
+];
+
 const boxes = [];
 
-function generatePlatform(init) {
+function generatePlatform(init, gameMode) {
     var newItemY = boxes.length ? boxes[boxes.length - 1].y - Math.random() * 150.0 - (init ? 100 : 0) : dimensions.height - 100 - (init ? 100 : 0);
 
     var newItemX = Math.random() * (dimensions.width - 30);
@@ -742,14 +796,35 @@ function generatePlatform(init) {
 
     var count = boxes.length ? boxes[boxes.length - 1].count + 1 : 1;
 
-    if (count !== 0 && count % 20 === 0)
+    if (gameMode === 3 && count !== 0 && count % 20 === 0)
         boxTypeOptions.push(boxTypes.ROCK);
 
     var type;
 
     do {
-        type = boxTypeOptions[Math.floor(Math.random() * boxTypeOptions.length)];
-    } while (boxes.length && type === boxTypes.ARROW && boxes[boxes.length - 1].type === boxTypes.ARROW);
+        switch (gameMode) {
+            case 1: // very fly
+                type = boxTypes.ARROW;
+            break;
+            case 2: // easy
+                type = boxTypes.SUCTION;
+            break;
+            case 3: // normal
+                type = boxTypeOptions[Math.floor(Math.random() * boxTypeOptions.length)];
+                break;
+            case 4: // hard
+                type = boxTypes.ROCK;
+            break;
+            case 5: // crazy
+                type = crazyTypeOptions[Math.floor(Math.random() * crazyTypeOptions.length)];
+            break;
+            default: 
+                type = boxTypeOptions[Math.floor(Math.random() * boxTypeOptions.length)];
+                break;
+        }
+
+        
+    } while ((gameMode === 3 && boxes.length && type === boxTypes.ARROW && boxes[boxes.length - 1].type === boxTypes.ARROW));
 
     var height = 5;
 
@@ -805,10 +880,6 @@ function generatePlatform(init) {
         adjustPlayer: adjustPlayer
     });
 }
-
-// seed the screen
-for (var i = 0; i < 3; i++)
-    generatePlatform(true);
 
 module.exports = {
     boxTypes: boxTypes,

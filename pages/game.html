@@ -23,6 +23,26 @@
         </p>
         
         <canvas id="canvas" style="border:1px solid #000"></canvas>
+        <div id="modeselect">
+            <h3>Select mode</h3>
+            <ul>
+                <li>
+                    <button onclick="window.beginGame(1)">Very Fly</button>
+                </li>
+                <li>
+                    <button onclick="window.beginGame(2)">Easy</button>
+                </li>
+                <li>
+                    <button onclick="window.beginGame(3)">Normal</button>
+                </li>
+                <li>
+                    <button onclick="window.beginGame(4)">Hard</button>
+                </li>
+                <li>
+                    <button onclick="window.beginGame(5)">Crazy</button>
+                </li>
+            </ul>
+        </div>
         <h4>
             <button type="button" id="retry" style="display:none;position:absolute;left:0;top:-8px;" onclick="location.reload();">Try Again</button>
             Controls
